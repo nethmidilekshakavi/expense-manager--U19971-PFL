@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Expense;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
@@ -13,15 +12,7 @@ class ExpenseController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        return Expense::latest()->get();
     }
 
     /**
@@ -29,7 +20,16 @@ class ExpenseController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'cost' => 'required|numeric|min:0',
+            'description' => 'required|string|max:255',
+            'expense_type' => 'required|in:travel,food,other',
+        ]);
+
+        $expense = Expense::create($validated);
+
+        return response()->json($expense, 201);
     }
 
     /**
@@ -37,15 +37,7 @@ class ExpenseController extends Controller
      */
     public function show(Expense $expense)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Expense $expense)
-    {
-        //
+        return $expense;
     }
 
     /**
@@ -53,7 +45,16 @@ class ExpenseController extends Controller
      */
     public function update(Request $request, Expense $expense)
     {
-        //
+        $validated = $request->validate([
+            'date' => 'sometimes|required|date',
+            'cost' => 'sometimes|required|numeric|min:0',
+            'description' => 'sometimes|required|string|max:255',
+            'expense_type' => 'sometimes|required|in:travel,food,other',
+        ]);
+
+        $expense->update($validated);
+
+        return response()->json($expense);
     }
 
     /**
@@ -61,6 +62,8 @@ class ExpenseController extends Controller
      */
     public function destroy(Expense $expense)
     {
-        //
+        $expense->delete();
+
+        return response()->json(null, 204);
     }
 }
