@@ -65,85 +65,113 @@ function EditExpense() {
 
   if (loading) {
     return (
-      <div className="app-container">
-        <p className="loading-state">Loading...</p>
+      <div className="container py-5 text-center">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading expense...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="app-container">
-      <Link to={`/expenses/${id}`} className="link-back">&larr; Back to details</Link>
-      <h1>Edit Expense</h1>
+    <div className="container py-5" style={{ maxWidth: '600px' }}>
+      <Link to={`/expenses/${id}`} className="d-inline-block mb-3 text-decoration-none">
+        &larr; Back to details
+      </Link>
+      <h1 className="mb-4">Edit Expense</h1>
 
-      <div className="card">
-        {errors.general && (
-          <p role="alert" className="alert alert-error">{errors.general}</p>
-        )}
+      <div className="card shadow-sm">
+        <div className="card-body p-4">
+          {errors.general && (
+            <div className="alert alert-danger" role="alert">
+              {errors.general}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="date">Date</label>
-            <input
-              type="date"
-              id="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              required
-            />
-            {errors.date && <p className="field-error">{errors.date[0]}</p>}
-          </div>
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="mb-3">
+              <label htmlFor="date" className="form-label">Date</label>
+              <input
+                type="date"
+                id="date"
+                name="date"
+                className={`form-control ${errors.date ? 'is-invalid' : ''}`}
+                value={formData.date}
+                onChange={handleChange}
+                required
+                aria-describedby={errors.date ? 'date-error' : undefined}
+              />
+              {errors.date && (
+                <div id="date-error" className="invalid-feedback">{errors.date[0]}</div>
+              )}
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="cost">Cost (Rs.)</label>
-            <input
-              type="number"
-              id="cost"
-              name="cost"
-              step="0.01"
-              min="0"
-              value={formData.cost}
-              onChange={handleChange}
-              required
-            />
-            {errors.cost && <p className="field-error">{errors.cost[0]}</p>}
-          </div>
+            <div className="mb-3">
+              <label htmlFor="cost" className="form-label">Cost (Rs.)</label>
+              <input
+                type="number"
+                id="cost"
+                name="cost"
+                step="0.01"
+                min="0"
+                className={`form-control ${errors.cost ? 'is-invalid' : ''}`}
+                value={formData.cost}
+                onChange={handleChange}
+                required
+                aria-describedby={errors.cost ? 'cost-error' : undefined}
+              />
+              {errors.cost && (
+                <div id="cost-error" className="invalid-feedback">{errors.cost[0]}</div>
+              )}
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="description">Description</label>
-            <input
-              type="text"
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              required
-            />
-            {errors.description && <p className="field-error">{errors.description[0]}</p>}
-          </div>
+            <div className="mb-3">
+              <label htmlFor="description" className="form-label">Description</label>
+              <input
+                type="text"
+                id="description"
+                name="description"
+                className={`form-control ${errors.description ? 'is-invalid' : ''}`}
+                value={formData.description}
+                onChange={handleChange}
+                required
+                aria-describedby={errors.description ? 'description-error' : undefined}
+              />
+              {errors.description && (
+                <div id="description-error" className="invalid-feedback">{errors.description[0]}</div>
+              )}
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="expense_type">Type</label>
-            <select
-              id="expense_type"
-              name="expense_type"
-              value={formData.expense_type}
-              onChange={handleChange}
-            >
-              <option value="travel">Travel</option>
-              <option value="food">Food</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
+            <div className="mb-4">
+              <label htmlFor="expense_type" className="form-label">Type</label>
+              <select
+                id="expense_type"
+                name="expense_type"
+                className="form-select"
+                value={formData.expense_type}
+                onChange={handleChange}
+              >
+                <option value="travel">Travel</option>
+                <option value="food">Food</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
 
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary" disabled={submitting}>
-              {submitting ? 'Saving...' : 'Save Changes'}
-            </button>
-            <Link to={`/expenses/${id}`} className="btn btn-secondary">Cancel</Link>
-          </div>
-        </form>
+            <div className="d-flex gap-2">
+              <button type="submit" className="btn btn-primary" disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </button>
+              <Link to={`/expenses/${id}`} className="btn btn-outline-secondary">Cancel</Link>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
