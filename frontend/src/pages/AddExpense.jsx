@@ -47,7 +47,7 @@ function AddExpense() {
           <p role="alert" className="alert alert-error">{errors.general}</p>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
             <label htmlFor="date">Date</label>
             <input
