@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getExpenses } from '../api/expenses';
+import { getExpenses, deleteExpense } from '../api/expenses';
 
 function ExpenseList() {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchExpenses();
@@ -22,6 +23,22 @@ function ExpenseList() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm('Delete this expense? This cannot be undone.');
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(id);
+      await deleteExpense(id);
+      setExpenses((prev) => prev.filter((e) => e.id !== id));
+    } catch (err) {
+      setError('Failed to delete expense. Please try again.');
+      console.error(err);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -103,7 +120,18 @@ function ExpenseList() {
                   </td>
                   <td className="cost-cell">Rs. {expense.cost}</td>
                   <td>
-                    <Link to={`/expenses/${expense.id}`} className="view-link">View</Link>
+                    <div className="row-actions">
+                      <Link to={`/expenses/${expense.id}`} className="view-link">View</Link>
+                      <Link to={`/expenses/${expense.id}/edit`} className="view-link">Edit</Link>
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        onClick={() => handleDelete(expense.id)}
+                        disabled={deletingId === expense.id}
+                      >
+                        {deletingId === expense.id ? '...' : 'Delete'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

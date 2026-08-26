@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { getExpense } from '../api/expenses';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { getExpense, deleteExpense } from '../api/expenses';
 
 function ExpenseDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [expense, setExpense] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchExpense();
@@ -23,6 +25,21 @@ function ExpenseDetail() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm('Delete this expense? This cannot be undone.');
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+      await deleteExpense(id);
+      navigate('/');
+    } catch (err) {
+      setError('Failed to delete expense. Please try again.');
+      console.error(err);
+      setDeleting(false);
     }
   };
 
@@ -76,6 +93,18 @@ function ExpenseDetail() {
             <dd>Rs. {expense.cost}</dd>
           </div>
         </dl>
+
+        <div className="detail-actions">
+          <Link to={`/expenses/${id}/edit`} className="btn btn-primary">Edit</Link>
+          <button
+            type="button"
+            className="btn btn-danger"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting...' : 'Delete'}
+          </button>
+        </div>
       </div>
     </div>
   );
