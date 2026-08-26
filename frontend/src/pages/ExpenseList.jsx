@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getExpenses, deleteExpense } from '../api/expenses';
+import { getExpenses } from '../api/expenses';
 
 function ExpenseList() {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchExpenses();
@@ -26,118 +25,87 @@ function ExpenseList() {
     }
   };
 
-  const handleDelete = async (id) => {
-    const confirmed = window.confirm('Delete this expense? This cannot be undone.');
-    if (!confirmed) return;
-
-    try {
-      setDeletingId(id);
-      await deleteExpense(id);
-      setExpenses((prev) => prev.filter((e) => e.id !== id));
-    } catch (err) {
-      setError('Failed to delete expense. Please try again.');
-      console.error(err);
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
   if (loading) {
     return (
-      <div className="app-container">
-        <p className="loading-state">Loading expenses...</p>
+      <div className="container py-5 text-center">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading expenses...</span>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="app-container">
-        <p role="alert" className="alert alert-error">{error}</p>
+      <div className="container py-5">
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
       </div>
     );
   }
 
-  const total = expenses.reduce((sum, e) => sum + Number(e.cost), 0);
-  const byType = expenses.reduce((acc, e) => {
-    acc[e.expense_type] = (acc[e.expense_type] || 0) + Number(e.cost);
-    return acc;
-  }, {});
+  const total = expenses.reduce((sum, e) => sum + parseFloat(e.cost), 0);
 
   return (
-    <div className="app-container">
-      <div className="page-header">
+    <div className="container py-5">
+      <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>My Expenses</h1>
-        <Link to="/add" className="btn btn-primary">+ Add New Expense</Link>
+        <Link to="/add" className="btn btn-primary">
+          + Add New Expense
+        </Link>
       </div>
 
-      {expenses.length > 0 && (
-        <div className="summary-pill">
-          <div className="summary-item">
-            <div className="summary-label">Total Spent</div>
-            <div className="summary-value">Rs. {total.toFixed(2)}</div>
-          </div>
-          <div className="divider" />
-          <div className="summary-item">
-            <div className="summary-label">Entries</div>
-            <div className="summary-value">{expenses.length}</div>
-          </div>
-          <div className="divider" />
-          <div className="summary-item">
-            <div className="summary-label">Top Category</div>
-            <div className="summary-value">
-              {Object.entries(byType).sort((a, b) => b[1] - a[1])[0]?.[0] || '-'}
-            </div>
-          </div>
-        </div>
-      )}
-
       {expenses.length === 0 ? (
-        <div className="table-wrapper">
-          <p className="empty-state">No expenses yet. Add your first one!</p>
+        <div className="alert alert-info" role="status">
+          No expenses yet. Add your first one!
         </div>
       ) : (
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Type</th>
-                <th>Cost (Rs.)</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {expenses.map((expense) => (
-                <tr key={expense.id}>
-                  <td>{expense.date}</td>
-                  <td>{expense.description}</td>
-                  <td>
-                    <span className={`type-badge ${expense.expense_type}`}>
-                      {expense.expense_type}
-                    </span>
-                  </td>
-                  <td className="cost-cell">Rs. {expense.cost}</td>
-                  <td>
-                    <div className="row-actions">
-                      <Link to={`/expenses/${expense.id}`} className="view-link">View</Link>
-                      <Link to={`/expenses/${expense.id}/edit`} className="view-link">Edit</Link>
-                      <button
-                        type="button"
-                        className="btn btn-danger btn-sm"
-                        onClick={() => handleDelete(expense.id)}
-                        disabled={deletingId === expense.id}
-                      >
-                        {deletingId === expense.id ? '...' : 'Delete'}
-                      </button>
-                    </div>
-                  </td>
+        <>
+          <p className="text-muted">
+            Total spent: <strong>Rs. {total.toFixed(2)}</strong> across {expenses.length} expense
+            {expenses.length !== 1 ? 's' : ''}
+          </p>
+          <div className="table-responsive">
+            <table className="table table-hover align-middle" aria-label="List of expenses">
+              <caption className="visually-hidden">A table of your recorded expenses</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Date</th>
+                  <th scope="col">Description</th>
+                  <th scope="col">Type</th>
+                  <th scope="col" className="text-end">Cost (Rs.)</th>
+                  <th scope="col">
+                    <span className="visually-hidden">Actions</span>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {expenses.map((expense) => (
+                  <tr key={expense.id}>
+                    <td>{expense.date}</td>
+                    <td>{expense.description}</td>
+                    <td>
+                      <span className="badge text-bg-secondary text-capitalize">
+                        {expense.expense_type}
+                      </span>
+                    </td>
+                    <td className="text-end">{parseFloat(expense.cost).toFixed(2)}</td>
+                    <td>
+                      <Link
+                        to={`/expenses/${expense.id}`}
+                        className="btn btn-sm btn-outline-primary"
+                        aria-label={`View details for ${expense.description}`}
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );
