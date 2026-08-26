@@ -1,4 +1,4 @@
-Get-ChildItem<?php
+<?php
 
 use Illuminate\Support\Str;
 
