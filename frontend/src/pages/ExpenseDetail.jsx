@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getExpense, deleteExpense } from '../api/expenses';
+import { useParams, Link } from 'react-router-dom';
+import { getExpense } from '../api/expenses';
 
 function ExpenseDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [expense, setExpense] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchExpense();
@@ -28,82 +26,62 @@ function ExpenseDetail() {
     }
   };
 
-  const handleDelete = async () => {
-    const confirmed = window.confirm('Delete this expense? This cannot be undone.');
-    if (!confirmed) return;
-
-    try {
-      setDeleting(true);
-      await deleteExpense(id);
-      navigate('/');
-    } catch (err) {
-      setError('Failed to delete expense. Please try again.');
-      console.error(err);
-      setDeleting(false);
-    }
-  };
-
   if (loading) {
     return (
-      <div className="app-container">
-        <p className="loading-state">Loading...</p>
+      <div className="container py-5 text-center">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading expense details...</span>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="app-container">
-        <Link to="/" className="link-back">&larr; Back to list</Link>
-        <p role="alert" className="alert alert-error">{error}</p>
+      <div className="container py-5" style={{ maxWidth: '600px' }}>
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+        <Link to="/" className="btn btn-outline-secondary">&larr; Back to list</Link>
       </div>
     );
   }
 
   if (!expense) return null;
 
+  const typeColors = {
+    travel: 'primary',
+    food: 'success',
+    other: 'secondary',
+  };
+
   return (
-    <div className="app-container">
-      <Link to="/" className="link-back">&larr; Back to list</Link>
-      <h1>Expense Details</h1>
+    <div className="container py-5" style={{ maxWidth: '600px' }}>
+      <Link to="/" className="d-inline-block mb-3 text-decoration-none">
+        &larr; Back to list
+      </Link>
 
-      <div className="card">
-        <dl className="detail-grid">
-          <div className="detail-item">
-            <dt>Date</dt>
-            <dd>{expense.date}</dd>
+      <div className="card shadow-sm">
+        <div className="card-body p-4">
+          <div className="d-flex justify-content-between align-items-start mb-3">
+            <h1 className="h3 mb-0">Expense Details</h1>
+            <span className={`badge text-bg-${typeColors[expense.expense_type] || 'secondary'} text-capitalize fs-6`}>
+              {expense.expense_type}
+            </span>
           </div>
 
-          <div className="detail-item">
-            <dt>Type</dt>
-            <dd>
-              <span className={`type-badge ${expense.expense_type}`}>
-                {expense.expense_type}
-              </span>
+          <dl className="row mb-0">
+            <dt className="col-sm-4 text-muted">Date</dt>
+            <dd className="col-sm-8">{expense.date}</dd>
+
+            <dt className="col-sm-4 text-muted">Description</dt>
+            <dd className="col-sm-8">{expense.description}</dd>
+
+            <dt className="col-sm-4 text-muted">Cost</dt>
+            <dd className="col-sm-8 fs-4 fw-bold">
+              Rs. {parseFloat(expense.cost).toFixed(2)}
             </dd>
-          </div>
-
-          <div className="detail-item">
-            <dt>Description</dt>
-            <dd>{expense.description}</dd>
-          </div>
-
-          <div className="detail-item cost">
-            <dt>Cost</dt>
-            <dd>Rs. {expense.cost}</dd>
-          </div>
-        </dl>
-
-        <div className="detail-actions">
-          <Link to={`/expenses/${id}/edit`} className="btn btn-primary">Edit</Link>
-          <button
-            type="button"
-            className="btn btn-danger"
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            {deleting ? 'Deleting...' : 'Delete'}
-          </button>
+          </dl>
         </div>
       </div>
     </div>
