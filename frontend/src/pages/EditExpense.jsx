@@ -7,7 +7,7 @@ function EditExpense() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     date: '',
-    cost: '',
+    cost_gbp: '',
     description: '',
     expense_type: 'travel',
   });
@@ -26,7 +26,7 @@ function EditExpense() {
       const expense = response.data;
       setFormData({
         date: expense.date,
-        cost: expense.cost,
+        cost_gbp: expense.cost_gbp,
         description: expense.description,
         expense_type: expense.expense_type,
       });
@@ -107,21 +107,21 @@ function EditExpense() {
             </div>
 
             <div className="mb-3">
-              <label htmlFor="cost" className="form-label">Cost (Rs.)</label>
+              <label htmlFor="cost_gbp" className="form-label">Cost (£)</label>
               <input
                 type="number"
-                id="cost"
-                name="cost"
+                id="cost_gbp"
+                name="cost_gbp"
                 step="0.01"
                 min="0"
-                className={`form-control ${errors.cost ? 'is-invalid' : ''}`}
-                value={formData.cost}
+                className={`form-control ${errors.cost_gbp ? 'is-invalid' : ''}`}
+                value={formData.cost_gbp}
                 onChange={handleChange}
                 required
-                aria-describedby={errors.cost ? 'cost-error' : undefined}
+                aria-describedby={errors.cost_gbp ? 'cost_gbp-error' : undefined}
               />
-              {errors.cost && (
-                <div id="cost-error" className="invalid-feedback">{errors.cost[0]}</div>
+              {errors.cost_gbp && (
+                <div id="cost_gbp-error" className="invalid-feedback">{errors.cost_gbp[0]}</div>
               )}
             </div>
 

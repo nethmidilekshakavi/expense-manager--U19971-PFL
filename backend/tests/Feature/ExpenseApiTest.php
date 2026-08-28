@@ -10,9 +10,6 @@ class ExpenseApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * Test listing all expenses.
-     */
     public function test_can_list_expenses(): void
     {
         Expense::factory()->count(3)->create();
@@ -23,14 +20,11 @@ class ExpenseApiTest extends TestCase
                  ->assertJsonCount(3);
     }
 
-    /**
-     * Test creating a new expense with valid data.
-     */
     public function test_can_create_expense(): void
     {
         $data = [
             'date' => '2026-08-23',
-            'cost' => 1500.50,
+            'cost_gbp' => 1500.50,
             'description' => 'Lunch meeting',
             'expense_type' => 'food',
         ];
@@ -43,25 +37,19 @@ class ExpenseApiTest extends TestCase
         $this->assertDatabaseHas('expenses', ['description' => 'Lunch meeting']);
     }
 
-    /**
-     * Test validation fails when required fields are missing.
-     */
     public function test_create_expense_fails_with_missing_fields(): void
     {
         $response = $this->postJson('/api/expenses', []);
 
         $response->assertStatus(422)
-                 ->assertJsonValidationErrors(['date', 'cost', 'description', 'expense_type']);
+                 ->assertJsonValidationErrors(['date', 'cost_gbp', 'description', 'expense_type']);
     }
 
-    /**
-     * Test validation fails with an invalid expense_type.
-     */
     public function test_create_expense_fails_with_invalid_type(): void
     {
         $data = [
             'date' => '2026-08-23',
-            'cost' => 100,
+            'cost_gbp' => 100,
             'description' => 'Test',
             'expense_type' => 'invalid_type',
         ];
@@ -72,9 +60,6 @@ class ExpenseApiTest extends TestCase
                  ->assertJsonValidationErrors(['expense_type']);
     }
 
-    /**
-     * Test viewing a single expense.
-     */
     public function test_can_view_single_expense(): void
     {
         $expense = Expense::factory()->create([
@@ -87,9 +72,6 @@ class ExpenseApiTest extends TestCase
                  ->assertJsonFragment(['description' => 'Taxi fare']);
     }
 
-    /**
-     * Test viewing a non-existent expense returns 404.
-     */
     public function test_viewing_nonexistent_expense_returns_404(): void
     {
         $response = $this->getJson('/api/expenses/999');
@@ -97,9 +79,6 @@ class ExpenseApiTest extends TestCase
         $response->assertStatus(404);
     }
 
-    /**
-     * Test updating an expense.
-     */
     public function test_can_update_expense(): void
     {
         $expense = Expense::factory()->create();
@@ -114,9 +93,6 @@ class ExpenseApiTest extends TestCase
         $this->assertDatabaseHas('expenses', ['description' => 'Updated description']);
     }
 
-    /**
-     * Test deleting an expense.
-     */
     public function test_can_delete_expense(): void
     {
         $expense = Expense::factory()->create();

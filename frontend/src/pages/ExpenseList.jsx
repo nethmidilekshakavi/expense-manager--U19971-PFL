@@ -68,9 +68,9 @@ function ExpenseList() {
     other: 'secondary',
   };
 
-  const total = expenses.reduce((sum, e) => sum + Number(e.cost), 0);
+  const total = expenses.reduce((sum, e) => sum + Number(e.cost_gbp), 0);
   const byType = expenses.reduce((acc, e) => {
-    acc[e.expense_type] = (acc[e.expense_type] || 0) + Number(e.cost);
+    acc[e.expense_type] = (acc[e.expense_type] || 0) + Number(e.cost_gbp);
     return acc;
   }, {});
   const topCategory = Object.entries(byType).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
@@ -89,7 +89,7 @@ function ExpenseList() {
           <div className="card-body d-flex justify-content-around text-center flex-wrap gap-3">
             <div>
               <div className="text-muted small">Total Spent</div>
-              <div className="fs-4 fw-bold">Rs. {total.toFixed(2)}</div>
+              <div className="fs-4 fw-bold">£{total.toFixed(2)}</div>
             </div>
             <div>
               <div className="text-muted small">Entries</div>
@@ -117,7 +117,7 @@ function ExpenseList() {
                   <th scope="col">Date</th>
                   <th scope="col">Description</th>
                   <th scope="col">Type</th>
-                  <th scope="col" className="text-end">Cost (Rs.)</th>
+                  <th scope="col" className="text-end">Cost (£)</th>
                   <th scope="col">
                     <span className="visually-hidden">Actions</span>
                   </th>
@@ -133,7 +133,7 @@ function ExpenseList() {
                         {expense.expense_type}
                       </span>
                     </td>
-                    <td className="text-end">{parseFloat(expense.cost).toFixed(2)}</td>
+                    <td className="text-end">{parseFloat(expense.cost_gbp).toFixed(2)}</td>
                     <td>
                       <div className="d-flex gap-2 justify-content-end">
                         <Link

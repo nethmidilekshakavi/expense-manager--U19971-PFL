@@ -37,7 +37,7 @@ describe('AddExpense', () => {
   it('submits the form with entered data and navigates on success', async () => {
     const user = userEvent.setup();
     expensesApi.createExpense.mockResolvedValue({
-      data: { id: 1, date: '2026-08-23', cost: 1500, description: 'Lunch', expense_type: 'food' },
+      data: { id: 1, date: '2026-08-23', cost_gbp: 1500, description: 'Lunch', expense_type: 'food' },
     });
 
     renderWithRouter(<AddExpense />);
@@ -52,7 +52,7 @@ describe('AddExpense', () => {
     await waitFor(() => {
       expect(expensesApi.createExpense).toHaveBeenCalledWith({
         date: '2026-08-23',
-        cost: '1500',
+        cost_gbp: '1500',
         description: 'Lunch',
         expense_type: 'food',
       });

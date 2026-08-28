@@ -6,7 +6,7 @@ function AddExpense() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     date: '',
-    cost: '',
+    cost_gbp: '',
     description: '',
     expense_type: 'travel',
   });
@@ -71,21 +71,21 @@ function AddExpense() {
             </div>
 
             <div className="mb-3">
-              <label htmlFor="cost" className="form-label">Cost (Rs.)</label>
+              <label htmlFor="cost_gbp" className="form-label">Cost (£)</label>
               <input
                 type="number"
-                id="cost"
-                name="cost"
+                id="cost_gbp"
+                name="cost_gbp"
                 step="0.01"
                 min="0"
-                className={`form-control ${errors.cost ? 'is-invalid' : ''}`}
-                value={formData.cost}
+                className={`form-control ${errors.cost_gbp ? 'is-invalid' : ''}`}
+                value={formData.cost_gbp}
                 onChange={handleChange}
                 required
-                aria-describedby={errors.cost ? 'cost-error' : undefined}
+                aria-describedby={errors.cost_gbp ? 'cost_gbp-error' : undefined}
               />
-              {errors.cost && (
-                <div id="cost-error" className="invalid-feedback">{errors.cost[0]}</div>
+              {errors.cost_gbp && (
+                <div id="cost_gbp-error" className="invalid-feedback">{errors.cost_gbp[0]}</div>
               )}
             </div>
 

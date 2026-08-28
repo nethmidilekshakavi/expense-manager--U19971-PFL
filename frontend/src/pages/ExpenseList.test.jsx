@@ -24,8 +24,8 @@ describe('ExpenseList', () => {
   it('displays a list of expenses after loading', async () => {
     expensesApi.getExpenses.mockResolvedValue({
       data: [
-        { id: 1, date: '2026-08-23', cost: 1500, description: 'Lunch', expense_type: 'food' },
-        { id: 2, date: '2026-08-22', cost: 500, description: 'Bus fare', expense_type: 'travel' },
+        { id: 1, date: '2026-08-23', cost_gbp: 1500, description: 'Lunch', expense_type: 'food' },
+        { id: 2, date: '2026-08-22', cost_gbp: 500, description: 'Bus fare', expense_type: 'travel' },
       ],
     });
 
