@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getExpenses, deleteExpense } from '../api/expenses';
 import MonthlyChart from '../components/MonthlyChart';
+import ConfirmModal from '../components/ConfirmModal';
 
 function ExpenseList() {
   const [expenses, setExpenses] = useState([]);
@@ -10,6 +11,7 @@ function ExpenseList() {
   const [deletingId, setDeletingId] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState('summary');
+  const [confirmTarget, setConfirmTarget] = useState(null); // { id, description }
 
   const [filters, setFilters] = useState({
     search: '',
@@ -55,14 +57,17 @@ function ExpenseList() {
     fetchExpenses();
   };
 
-  const handleDelete = async (id, description) => {
-    const confirmed = window.confirm(`Delete "${description}"? This cannot be undone.`);
-    if (!confirmed) return;
+  const requestDelete = (id, description) => {
+    setConfirmTarget({ id, description });
+  };
 
+  const confirmDelete = async () => {
+    if (!confirmTarget) return;
     try {
-      setDeletingId(id);
-      await deleteExpense(id);
-      setExpenses((prev) => prev.filter((e) => e.id !== id));
+      setDeletingId(confirmTarget.id);
+      await deleteExpense(confirmTarget.id);
+      setExpenses((prev) => prev.filter((e) => e.id !== confirmTarget.id));
+      setConfirmTarget(null);
     } catch (err) {
       setError('Failed to delete expense. Please try again.');
       console.error(err);
@@ -133,24 +138,34 @@ function ExpenseList() {
         <div className="d-flex gap-2">
           <button
             type="button"
-            className="btn btn-sm btn-outline-secondary position-relative"
+            className="btn btn-sm btn-outline-secondary position-relative d-inline-flex align-items-center gap-1"
             onClick={() => setShowFilters((s) => !s)}
           >
-            🔍 Search & Filter
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z"/>
+            </svg>
+            Filter
             {activeFilterCount > 0 && (
-              <span className="badge rounded-pill text-bg-primary ms-1">{activeFilterCount}</span>
+              <span className="badge rounded-pill text-bg-primary">{activeFilterCount}</span>
             )}
           </button>
           <button
             type="button"
-            className="btn btn-sm btn-outline-secondary"
+            className="btn btn-sm btn-success d-inline-flex align-items-center gap-1"
             onClick={exportToCsv}
             disabled={expenses.length === 0}
           >
-            ⬇ CSV
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+              <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+            </svg>
+            Export CSV
           </button>
-          <Link to="/add" className="btn btn-sm btn-primary">
-            + Add Expense
+          <Link to="/add" className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            Add Expense
           </Link>
         </div>
       </div>
@@ -313,7 +328,7 @@ function ExpenseList() {
                         <button
                           type="button"
                           className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleDelete(expense.id, expense.description)}
+                          onClick={() => requestDelete(expense.id, expense.description)}
                           disabled={deletingId === expense.id}
                           aria-label={`Delete expense: ${expense.description}`}
                         >
@@ -328,6 +343,15 @@ function ExpenseList() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        show={!!confirmTarget}
+        title="Delete Expense"
+        message={confirmTarget ? `Are you sure you want to delete "${confirmTarget.description}"? This cannot be undone.` : ''}
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmTarget(null)}
+        confirming={deletingId !== null}
+      />
     </div>
   );
 }
