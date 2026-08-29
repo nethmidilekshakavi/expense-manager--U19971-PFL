@@ -1,21 +1,31 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getExpenses, deleteExpense } from '../api/expenses';
+import MonthlyChart from '../components/MonthlyChart';
 
 function ExpenseList() {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [activeTab, setActiveTab] = useState('summary');
+
+  const [filters, setFilters] = useState({
+    search: '',
+    expense_type: '',
+    date_from: '',
+    date_to: '',
+  });
 
   useEffect(() => {
     fetchExpenses();
   }, []);
 
-  const fetchExpenses = async () => {
+  const fetchExpenses = async (activeFilters = {}) => {
     try {
       setLoading(true);
-      const response = await getExpenses();
+      const response = await getExpenses(activeFilters);
       setExpenses(response.data);
       setError(null);
     } catch (err) {
@@ -24,6 +34,25 @@ function ExpenseList() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFilterChange = (e) => {
+    setFilters({ ...filters, [e.target.name]: e.target.value });
+  };
+
+  const activeFilterCount = Object.values(filters).filter((v) => v !== '').length;
+
+  const applyFilters = (e) => {
+    e.preventDefault();
+    const activeFilters = Object.fromEntries(
+      Object.entries(filters).filter(([, v]) => v !== '')
+    );
+    fetchExpenses(activeFilters);
+  };
+
+  const clearFilters = () => {
+    setFilters({ search: '', expense_type: '', date_from: '', date_to: '' });
+    fetchExpenses();
   };
 
   const handleDelete = async (id, description) => {
@@ -42,7 +71,28 @@ function ExpenseList() {
     }
   };
 
-  if (loading) {
+  const exportToCsv = () => {
+    if (expenses.length === 0) return;
+
+    const headers = ['Date', 'Description', 'Type', 'Cost (GBP)'];
+    const rows = expenses.map((e) => [
+      e.date,
+      `"${e.description.replace(/"/g, '""')}"`,
+      e.expense_type,
+      parseFloat(e.cost_gbp).toFixed(2),
+    ]);
+
+    const csvContent = [headers, ...rows].map((row) => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `expenses-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  if (loading && expenses.length === 0) {
     return (
       <div className="container py-5 text-center">
         <div className="spinner-border" role="status">
@@ -76,28 +126,138 @@ function ExpenseList() {
   const topCategory = Object.entries(byType).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
 
   return (
-    <div className="container py-5">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>My Expenses</h1>
-        <Link to="/add" className="btn btn-primary">
-          + Add New Expense
-        </Link>
+    <div className="container py-4">
+      {/* Header row */}
+      <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h1 className="h3 mb-0">My Expenses</h1>
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary position-relative"
+            onClick={() => setShowFilters((s) => !s)}
+          >
+            🔍 Search & Filter
+            {activeFilterCount > 0 && (
+              <span className="badge rounded-pill text-bg-primary ms-1">{activeFilterCount}</span>
+            )}
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            onClick={exportToCsv}
+            disabled={expenses.length === 0}
+          >
+            ⬇ CSV
+          </button>
+          <Link to="/add" className="btn btn-sm btn-primary">
+            + Add Expense
+          </Link>
+        </div>
       </div>
 
+      {/* Collapsible filter bar */}
+      {showFilters && (
+        <div className="card shadow-sm mb-3">
+          <div className="card-body py-3">
+            <form onSubmit={applyFilters} className="row g-2 align-items-end">
+              <div className="col-md-3">
+                <label htmlFor="search" className="form-label small text-muted mb-1">Search</label>
+                <input
+                  type="text" id="search" name="search" className="form-control form-control-sm"
+                  placeholder="Description..." value={filters.search} onChange={handleFilterChange}
+                />
+              </div>
+              <div className="col-md-2">
+                <label htmlFor="expense_type" className="form-label small text-muted mb-1">Type</label>
+                <select
+                  id="expense_type" name="expense_type" className="form-select form-select-sm"
+                  value={filters.expense_type} onChange={handleFilterChange}
+                >
+                  <option value="">All</option>
+                  <option value="travel">Travel</option>
+                  <option value="food">Food</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="col-md-2">
+                <label htmlFor="date_from" className="form-label small text-muted mb-1">From</label>
+                <input
+                  type="date" id="date_from" name="date_from" className="form-control form-control-sm"
+                  value={filters.date_from} onChange={handleFilterChange}
+                />
+              </div>
+              <div className="col-md-2">
+                <label htmlFor="date_to" className="form-label small text-muted mb-1">To</label>
+                <input
+                  type="date" id="date_to" name="date_to" className="form-control form-control-sm"
+                  value={filters.date_to} onChange={handleFilterChange}
+                />
+              </div>
+              <div className="col-md-3 d-flex gap-2">
+                <button type="submit" className="btn btn-sm btn-primary flex-fill">Apply</button>
+                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={clearFilters}>Clear</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {expenses.length > 0 && (
-        <div className="card shadow-sm mb-4">
-          <div className="card-body d-flex justify-content-around text-center flex-wrap gap-3">
-            <div>
-              <div className="text-muted small">Total Spent</div>
-              <div className="fs-4 fw-bold">£{total.toFixed(2)}</div>
+        <div className="card shadow-sm mb-3">
+          <div className="card-body py-2">
+            {/* Compact stats strip */}
+            <div className="d-flex justify-content-around text-center flex-wrap py-2 border-bottom mb-2">
+              <div>
+                <span className="text-muted small me-1">Total:</span>
+                <span className="fw-bold">£{total.toFixed(2)}</span>
+              </div>
+              <div>
+                <span className="text-muted small me-1">Entries:</span>
+                <span className="fw-bold">{expenses.length}</span>
+              </div>
+              <div>
+                <span className="text-muted small me-1">Top:</span>
+                <span className="fw-bold text-capitalize">{topCategory}</span>
+              </div>
             </div>
-            <div>
-              <div className="text-muted small">Entries</div>
-              <div className="fs-4 fw-bold">{expenses.length}</div>
-            </div>
-            <div>
-              <div className="text-muted small">Top Category</div>
-              <div className="fs-4 fw-bold text-capitalize">{topCategory}</div>
+
+            {/* Tabs for extra detail */}
+            <ul className="nav nav-tabs nav-tabs-sm border-0" role="tablist">
+              <li className="nav-item" role="presentation">
+                <button
+                  type="button"
+                  className={`nav-link py-1 px-3 small ${activeTab === 'summary' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('summary')}
+                >
+                  By Category
+                </button>
+              </li>
+              <li className="nav-item" role="presentation">
+                <button
+                  type="button"
+                  className={`nav-link py-1 px-3 small ${activeTab === 'chart' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('chart')}
+                >
+                  Monthly Chart
+                </button>
+              </li>
+            </ul>
+
+            <div className="pt-3">
+              {activeTab === 'summary' && (
+                <div className="d-flex flex-wrap gap-3">
+                  {Object.entries(byType).map(([type, amount]) => (
+                    <div key={type} className="d-flex align-items-center gap-2">
+                      <span className={`badge text-bg-${typeColors[type] || 'secondary'} text-capitalize`}>
+                        {type}
+                      </span>
+                      <span className="fw-semibold small">£{amount.toFixed(2)}</span>
+                      <span className="text-muted small">({((amount / total) * 100).toFixed(0)}%)</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {activeTab === 'chart' && <MonthlyChart expenses={expenses} compact />}
             </div>
           </div>
         </div>
@@ -105,12 +265,12 @@ function ExpenseList() {
 
       {expenses.length === 0 ? (
         <div className="alert alert-info" role="status">
-          No expenses yet. Add your first one!
+          No expenses match your filters.
         </div>
       ) : (
         <div className="card shadow-sm">
           <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0" aria-label="List of expenses">
+            <table className="table table-hover table-sm align-middle mb-0" aria-label="List of expenses">
               <caption className="visually-hidden">A table of your recorded expenses</caption>
               <thead>
                 <tr>

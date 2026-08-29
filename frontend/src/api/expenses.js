@@ -10,7 +10,7 @@ const api = axios.create({
   },
 });
 
-export const getExpenses = () => api.get('/expenses');
+export const getExpenses = (params = {}) => api.get('/expenses', { params });
 
 export const getExpense = (id) => api.get(`/expenses/${id}`);
 

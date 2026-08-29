@@ -7,9 +7,27 @@ use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Expense::latest()->get();
+        $query = Expense::query();
+
+        if ($request->filled('expense_type')) {
+            $query->where('expense_type', $request->expense_type);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('date', '<=', $request->date_to);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('description', 'like', '%' . $request->search . '%');
+        }
+
+        return $query->latest()->get();
     }
 
     public function store(Request $request)
